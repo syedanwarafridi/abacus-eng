@@ -115,41 +115,162 @@ class YOLOApp(QWidget):
         self.video_label.line_drawn.connect(self.store_line)
     ################################################################
         
+    # def update_counts(self, route_counts):
+    #     """Update UI with direction counts per class"""
+    #     # Clear existing widgets
+    #     while self.count_container.count():
+    #         child = self.count_container.takeAt(0)
+    #         if child.widget():
+    #             child.widget().deleteLater()
+
+    #     # Add direction headers and class counts
+    #     for route_key, data in route_counts.items():
+    #         direction = data["direction"]
+    #         counts = data["counts"]
+            
+    #         # Direction header
+    #         header = QLabel(f"🚦 {direction}")
+    #         header.setStyleSheet("font-weight: bold; color: #2c3e50;")
+    #         self.count_container.addWidget(header)
+            
+    #         # Class counts
+    #         for cls in range(7):
+    #             class_name = self.class_names[cls]
+    #             count = counts.get(cls, 0)
+    #             label = QLabel(f"  {class_name}: {count}")
+    #             label.setStyleSheet("""
+    #                 QLabel {
+    #                     font-size: 12px; 
+    #                     padding: 4px;
+    #                     margin-left: 15px;
+    #                     color: #34495e;
+    #                 }
+    #             """)
+    #             self.count_container.addWidget(label)
+            
+    #         # Add spacing between directions
+    #         self.count_container.addSpacing(10)
     def update_counts(self, route_counts):
-        """Update UI with direction counts per class"""
-        # Clear existing widgets
         while self.count_container.count():
             child = self.count_container.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
 
-        # Add direction headers and class counts
-        for route_key, data in route_counts.items():
-            direction = data["direction"]
+        grid_layout = QGridLayout()
+        grid_layout.setSpacing(15)
+
+        max_cards = 12
+        num_directions = min(len(route_counts), max_cards)
+
+        card_colors = [
+            "#dff0d8",  # Light green for top-left
+            "#fde4e5",  # Soft pink
+            "#ece4f5",  # Lavender/purple
+            "#fbeedb",  # Light peach/orange
+            "#dff0d8",  # Green again for second row, first col
+            "#fde4e5",  # Pink
+            "#ece4f5",  # Purple
+            "#fbeedb",  # Orange
+            "#dff0d8",  # Green
+            "#fde4e5",  # Pink
+            "#ece4f5",  # Purple
+            "#fbeedb",  # Orange
+        ]
+
+        route_items = list(route_counts.items())  # [(key, {"direction":..., "counts":...}), ...]
+
+        for i in range(num_directions):
+            route_key, data = route_items[i]
+            direction_name = data["direction"]
             counts = data["counts"]
-            
-            # Direction header
-            header = QLabel(f"🚦 {direction}")
-            header.setStyleSheet("font-weight: bold; color: #2c3e50;")
-            self.count_container.addWidget(header)
-            
-            # Class counts
-            for cls in range(7):
-                class_name = self.class_names[cls]
-                count = counts.get(cls, 0)
-                label = QLabel(f"  {class_name}: {count}")
-                label.setStyleSheet("""
+
+            card_frame = QFrame()
+            card_frame.setStyleSheet("""
+                QFrame {
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                }
+            """)
+            card_layout = QVBoxLayout(card_frame)
+            card_layout.setContentsMargins(0, 0, 0, 0)
+            card_layout.setSpacing(0)
+
+            header_color = card_colors[i]
+            header_frame = QFrame()
+            header_frame.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {header_color};
+                    border-top-left-radius: 4px;
+                    border-top-right-radius: 4px;
+                    min-height: 30px;
+                }}
+            """)
+            header_layout = QHBoxLayout(header_frame)
+            header_layout.setContentsMargins(8, 2, 8, 2)
+
+            direction_label = QLabel(direction_name)
+            direction_label.setStyleSheet("""
+                QLabel {
+                    font-weight: bold;
+                    font-size: 14px;
+                    color: #333;
+                }
+            """)
+            header_layout.addWidget(direction_label, alignment=Qt.AlignCenter)
+
+            card_layout.addWidget(header_frame)
+
+            body_frame = QFrame()
+            body_layout = QVBoxLayout(body_frame)
+            body_layout.setContentsMargins(10, 8, 10, 8)
+            body_layout.setSpacing(6)
+
+            for cls_id in range(7):
+                row_hbox = QHBoxLayout()
+                row_hbox.setSpacing(10)
+
+                # Icon
+                icon_filename = f"{self.class_names[cls_id].replace(' ', '_')}.png"
+                icon_path = os.path.join("icons", icon_filename)
+
+                icon_label = QLabel()
+                if os.path.exists(icon_path):
+                    pixmap = QPixmap(icon_path).scaled(
+                        30, 30, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                    )
+                    icon_label.setPixmap(pixmap)
+                else:
+                    icon_label.setText("[X]")  # fallback if icon doesn't exist
+                row_hbox.addWidget(icon_label, alignment=Qt.AlignLeft)
+
+                # Count label
+                count_value = counts.get(cls_id, 0)
+                count_label = QLabel(str(count_value))
+                count_label.setStyleSheet("""
                     QLabel {
-                        font-size: 12px; 
-                        padding: 4px;
-                        margin-left: 15px;
-                        color: #34495e;
+                        font-size: 13px;
+                        color: #333;
                     }
                 """)
-                self.count_container.addWidget(label)
-            
-            # Add spacing between directions
-            self.count_container.addSpacing(10)
+                row_hbox.addWidget(count_label, alignment=Qt.AlignLeft)
+
+                body_layout.addLayout(row_hbox)
+
+            card_layout.addWidget(body_frame)
+
+            # Round the bottom corners of the card
+            body_frame.setStyleSheet("""
+                QFrame {
+                    border-bottom-left-radius: 4px;
+                    border-bottom-right-radius: 4px;
+                }
+            """)
+
+            row = i // 4
+            col = i % 4
+            grid_layout.addWidget(card_frame, row, col)
+
+        self.count_container.addLayout(grid_layout)
             
     def start_drawing(self):
         """Enables line drawing mode."""
