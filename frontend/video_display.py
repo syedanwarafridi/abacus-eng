@@ -115,46 +115,22 @@ class YOLOApp(QWidget):
         self.video_label.line_drawn.connect(self.store_line)
     ################################################################
         
-    # def update_counts(self, route_counts):
-    #     """Update UI with direction counts per class"""
-    #     # Clear existing widgets
-    #     while self.count_container.count():
-    #         child = self.count_container.takeAt(0)
-    #         if child.widget():
-    #             child.widget().deleteLater()
-
-    #     # Add direction headers and class counts
-    #     for route_key, data in route_counts.items():
-    #         direction = data["direction"]
-    #         counts = data["counts"]
-            
-    #         # Direction header
-    #         header = QLabel(f"🚦 {direction}")
-    #         header.setStyleSheet("font-weight: bold; color: #2c3e50;")
-    #         self.count_container.addWidget(header)
-            
-    #         # Class counts
-    #         for cls in range(7):
-    #             class_name = self.class_names[cls]
-    #             count = counts.get(cls, 0)
-    #             label = QLabel(f"  {class_name}: {count}")
-    #             label.setStyleSheet("""
-    #                 QLabel {
-    #                     font-size: 12px; 
-    #                     padding: 4px;
-    #                     margin-left: 15px;
-    #                     color: #34495e;
-    #                 }
-    #             """)
-    #             self.count_container.addWidget(label)
-            
-    #         # Add spacing between directions
-    #         self.count_container.addSpacing(10)
     def update_counts(self, route_counts):
+        # Clear the entire layout of count cards
         while self.count_container.count():
-            child = self.count_container.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
+            item = self.count_container.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                # Recursively clear child layouts if any
+                def clear_layout(layout):
+                    while layout.count():
+                        child = layout.takeAt(0)
+                        if child.widget():
+                            child.widget().deleteLater()
+                        elif child.layout():
+                            clear_layout(child.layout())
+                clear_layout(item.layout())
 
         grid_layout = QGridLayout()
         grid_layout.setSpacing(15)
@@ -195,7 +171,7 @@ class YOLOApp(QWidget):
             card_layout.setContentsMargins(0, 0, 0, 0)
             card_layout.setSpacing(0)
 
-            header_color = card_colors[i]
+            header_color = card_colors[i % len(card_colors)]
             header_frame = QFrame()
             header_frame.setStyleSheet(f"""
                 QFrame {{
@@ -270,6 +246,7 @@ class YOLOApp(QWidget):
             col = i % 4
             grid_layout.addWidget(card_frame, row, col)
 
+        # Add the new grid layout to the count container
         self.count_container.addLayout(grid_layout)
             
     def start_drawing(self):
