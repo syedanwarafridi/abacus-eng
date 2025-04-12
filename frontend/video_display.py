@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QPushButton, QLabel, QVBoxLayout, QFileDialog, 
-    QHBoxLayout, QStyle, QSizePolicy, QSpacerItem, QTableWidget, QTableWidgetItem
+    QHBoxLayout, QStyle, QSizePolicy, QSpacerItem, QTableWidget, QTableWidgetItem, QFrame, QGridLayout
 )
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt, QPoint
@@ -357,9 +357,15 @@ class YOLOApp(QWidget):
                 self.record_button.setIcon(self.style().standardIcon(QStyle.SP_DialogApplyButton))
 
     def update_frame(self, q_img):
-        """Updates the QLabel with the detected frame."""
+        """Scale frame to fit container while maintaining aspect ratio"""
         pixmap = QPixmap.fromImage(q_img)
-        self.video_label.setPixmap(pixmap.scaled(800, 450, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        scaled_pixmap = pixmap.scaled(
+            self.video_label.width(),
+            self.video_label.height(),
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation
+        )
+        self.video_label.setPixmap(scaled_pixmap)
 
     def closeEvent(self, event):
         """Ensures the video processing stops when the app closes."""
