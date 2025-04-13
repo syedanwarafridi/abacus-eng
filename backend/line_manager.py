@@ -1,5 +1,4 @@
-import numpy as np
-
+import pandas as pd
 class LineManager:
     def __init__(self):
         self.lines = {}
@@ -8,14 +7,23 @@ class LineManager:
         self.reference_width = 256 
         self.reference_height = 416
         self.track_history = {}
-        self.routes = []  # Added
+        self.routes = []
         self.route_counts = {}
         self.class_names = {
             0: "Passenger Car", 1: "Motorbike", 2: "Van",
             3: "Truck", 4: "Large Truck", 5: "Bus", 6: "Minibus"
         }
         
-
+        #######################################################
+        self.frame_count = 0
+        self.fps = 30  # Will be updated when video is loaded
+        self.start_times = {}  # Track start times for each route
+        
+    def set_video_info(self, fps, total_frames):
+        self.fps = fps
+        self.total_frames = total_frames
+        
+    #############################################################    
     def set_reference_size(self, width, height):
         self.reference_width = width
         self.reference_height = height
@@ -53,6 +61,8 @@ class LineManager:
 
     
     def check_line_crossing(self, detections, frame_shape):
+        self.frame_count += 1
+        
         # Clear previous tracking data for new detections
         current_ids = {det['id'] for det in detections if det['id'] is not None}
         self.track_history = {k: v for k, v in self.track_history.items() if k in current_ids}
@@ -94,6 +104,8 @@ class LineManager:
 
         # Third pass: Validate routes and update counts
         for track_id, history in self.track_history.items():
+            print(f"Track ID: {track_id}, Crossed Lines: {history['crossed_lines']}")
+
             if history['counted']:
                 continue
 
@@ -101,14 +113,14 @@ class LineManager:
             vehicle_cls = next((d['cls'] for d in detections if d['id'] == track_id), None)
 
             if vehicle_cls is not None and len(crossed) >= 2:
-                # Only count first valid route
                 route_key = (crossed[0], crossed[1])
                 
                 if route_key in self.route_counts:
+                    current_time_sec = self.frame_count / self.fps
                     self.route_counts[route_key]["counts"][vehicle_cls] += 1
-                    history['counted'] = True  # Mark as counted
-                    print(f"Count updated for {self.route_counts[route_key]['direction']} "
-                        f"({self.class_names[vehicle_cls]}): +1")
+                    self.route_counts[route_key]["times"] = self.route_counts[route_key].get("times", [])
+                    self.route_counts[route_key]["times"].append(current_time_sec)
+                    history['counted'] = True
                     
     def _is_crossing_line(self, track_id, box, line_start, line_end):
         """Improved line crossing detection with direction checking"""
@@ -127,19 +139,10 @@ class LineManager:
            (min(y1_line, y2_line) <= center[1] <= max(y1_line, y2_line)):
             numerator = abs((y2_line - y1_line)*center[0] - (x2_line - x1_line)*center[1] + x2_line*y1_line - y2_line*x1_line)
             denominator = ((y2_line - y1_line)**2 + (x2_line - x1_line)**2)**0.5
-            return numerator/denominator < 5
+            return numerator/denominator < 15
         
         return False
 
     def set_reference_size(self, width, height):
         self.reference_width = width
         self.reference_height = height
-        
-    def reset(self):
-        """Reset all counts and lines for new video"""
-        self.lines.clear()
-        self.next_id = 0
-        self.counts = {i: 0 for i in range(7)}
-        self.track_history.clear()
-        self.reference_width = 256  # Reset to default
-        self.reference_height = 416  # Reset to default
