@@ -9,9 +9,9 @@ class LineDrawer(QLabel):
         super().__init__(parent)
         self.lines = []
         self.current_line = []
-        self.original_size = QPoint(1, 1)  # Stores original video dimensions
-        self.display_size = QPoint(1, 1)   # Stores displayed frame dimensions
-        self.offset = QPoint(0, 0)         # Stores letterboxing offsets
+        self.original_size = QPoint(1, 1)
+        self.display_size = QPoint(1, 1)
+        self.offset = QPoint(0, 0)
 
     def load_frame(self, q_img):
         """Store original dimensions and calculate display parameters"""
@@ -136,4 +136,4 @@ class LineDrawer(QLabel):
         """Clear all stored lines"""
         self.lines = []
         self.current_line = []
-        self.update()  # Trigger redraw
+        self.update() 
