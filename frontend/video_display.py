@@ -357,8 +357,8 @@ class YOLOApp(QWidget):
         
         # Table
         self.route_table = QTableWidget()
-        self.route_table.setColumnCount(3)
-        self.route_table.setHorizontalHeaderLabels(["Origin Line", "Destination Line", "Direction"])
+        self.route_table.setColumnCount(4)
+        self.route_table.setHorizontalHeaderLabels(["Origin Line", "Destination Line", "Direction", "Start Time (HH:MM:SS AM/PM)"])
         self.route_table.horizontalHeader().setStretchLastSection(True)
         
         # Controls
@@ -388,13 +388,13 @@ class YOLOApp(QWidget):
             routes = []
             valid = True
             
-            # Validate and collect routes
             for row in range(self.route_table.rowCount()):
                 origin = self.route_table.item(row, 0).text() if self.route_table.item(row, 0) else ""
                 dest = self.route_table.item(row, 1).text() if self.route_table.item(row, 1) else ""
                 direction = self.route_table.item(row, 2).text() if self.route_table.item(row, 2) else ""
+                start_time = self.route_table.item(row, 3).text() if self.route_table.item(row, 3) else ""
 
-                if not all([origin, dest, direction]):
+                if not all([origin, dest, direction, start_time]):
                     valid = False
                     break
                     
@@ -402,7 +402,8 @@ class YOLOApp(QWidget):
                     routes.append({
                         "origin": int(origin.replace("Line ", "").strip()),
                         "destination": int(dest.replace("Line ", "").strip()),
-                        "direction": direction
+                        "direction": direction,
+                        "start_time": start_time
                     })
                 except ValueError:
                     valid = False
