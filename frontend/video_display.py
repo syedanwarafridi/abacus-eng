@@ -11,6 +11,7 @@ from frontend.line_drawer import LineDrawer
 import cv2
 import json
 import os
+from frontend.analytics import Dashboard
 
 class YOLOApp(QWidget):
     """Main PyQt5 GUI Application with structured 3-column layout"""
@@ -46,9 +47,7 @@ class YOLOApp(QWidget):
         col1.addWidget(self.create_route_table(), 20)  # 20% height for route table
         
         # Column 2: Placeholder
-        col2 = QLabel("Fill Soon")
-        col2.setAlignment(Qt.AlignCenter)
-        col2.setStyleSheet("background: #f0f0f0; font-size: 24px; border: 2px dashed #aaa;")
+        col2 = Dashboard()
         
         # Column 3: Vehicle Counts
         col3 = QVBoxLayout()
@@ -64,6 +63,7 @@ class YOLOApp(QWidget):
         self.setLayout(main_layout)
         self.setWindowTitle("YOLO Vehicle Detection")
         self.setGeometry(200, 200, 1200, 800)
+        self.setStyleSheet("background-color: white;")
 
     def create_button_layout(self):
         layout = QHBoxLayout()
